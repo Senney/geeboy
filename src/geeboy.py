@@ -2,6 +2,7 @@ import logging
 from cartridge import Cartridge
 from disassembler import Disassembler
 from instruction import OpcodeParser
+from mem import mbc1
 
 
 class GeeBoy(object):
@@ -12,10 +13,7 @@ class GeeBoy(object):
         self._codes = OpcodeParser()
         self._codes.load_instructions("./dat/opcodes.json")
 
-        self._disasm = Disassembler(self._cartridge, self._codes)
-        handle = open("../data/loz.asm", "w")
-        self._disasm.disassemble(handle)
-        handle.close()
+        self._mem = mbc1.MBC1(self._cartridge)
 
 
 if __name__ == "__main__":
