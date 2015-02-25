@@ -77,7 +77,7 @@ class MemoryController(object):
 
         # Interrupt Enabled register
         if byte == 0xFFFF:
-            return self.interrupts_enabled
+            return 1 if self.interrupts_enabled else 0
 
     def write(self, byte, value, size=1):
         raise NotImplementedError("Cannot write. No ROM or RAM defined.")
