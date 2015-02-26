@@ -44,7 +44,7 @@ class InstructionMap(object):
             lambda: None,     # [15] DEC D
             lambda: self.ld_r_im8("D"),         # [16] LD D d8
             lambda: None,     # [17] RLA
-            lambda: None,     # [18] JR r8
+            lambda: self.jp_oim8(),             # [18] JR r8
             lambda: None,     # [19] ADD HL DE
             lambda: self.ld_r_mrc("A", "DE"),   # [1a] LD A (DE)
             lambda: None,     # [1b] DEC DE
@@ -54,25 +54,25 @@ class InstructionMap(object):
             lambda: None,     # [1f] RRA
 
             # 20
-            lambda: None,     # [20] JR NZ r8
+            lambda: self.jp_cc_oim8("Z", 0),    # [20] JR NZ r8
             lambda: self.ld_rc_im16("HL"),      # [21] LD HL d16
             lambda: None,     # [22] LD (HL+) A TODO
             lambda: None,     # [23] INC HL
             lambda: None,     # [24] INC H
             lambda: None,     # [25] DEC H
-            lambda:  self.ld_r_im8("H"),       # [26] LD H d8
+            lambda: self.ld_r_im8("H"),        # [26] LD H d8
             lambda: None,     # [27] DAA
-            lambda: None,     # [28] JR Z r8
+            lambda: self.jp_cc_oim8("Z", 1),   # [28] JR Z r8
             lambda: None,     # [29] ADD HL HL
             lambda: None,     # [2a] LD A (HL+)
             lambda: None,     # [2b] DEC HL
             lambda: None,     # [2c] INC L
             lambda: None,     # [2d] DEC L
-            lambda:  self.ld_r_im8("L"),       # [2e] LD L d8
+            lambda: self.ld_r_im8("L"),        # [2e] LD L d8
             lambda: None,     # [2f] CPL
 
             # 30
-            lambda: None,     # [30] JR NC r8
+            lambda: self.jp_cc_oim8("C", 0),   # [30] JR NC r8
             lambda: self.ld_sp_im16(),         # [31] LD SP d16
             lambda: None,     # [32] LD (HL-) A TODO
             lambda: None,     # [33] INC SP
@@ -80,7 +80,7 @@ class InstructionMap(object):
             lambda: None,     # [35] DEC (HL)
             lambda: self.ld_mrc_im8("HL"),     # [36] LD (HL) d8
             lambda: None,     # [37] SCF
-            lambda: None,     # [38] JR C r8
+            lambda: self.jp_cc_oim8("C", 1),   # [38] JR C r8
             lambda: None,     # [39] ADD HL SP
             lambda: None,     # [3a] LD A (HL-) TODO
             lambda: None,     # [3b] DEC SP
@@ -234,76 +234,76 @@ class InstructionMap(object):
             lambda: None,     # [bf] CP A
 
             # C0
-            lambda: None,     # [c0] RET NZ
-            lambda: None,     # [c1] POP BC
+            lambda: self.ret("Z", 0),           # [c0] RET NZ
+            lambda: self.pop("BC"),             # [c1] POP BC
             lambda: None,     # [c2] JP NZ a16
-            lambda: None,     # [c3] JP a16
-            lambda: None,     # [c4] CALL NZ a16
-            lambda: None,     # [c5] PUSH BC
+            lambda: self.jp_im16(),             # [c3] JP a16
+            lambda: self.call("Z", 0),          # [c4] CALL NZ a16
+            lambda: self.push("BC"),            # [c5] PUSH BC
             lambda: None,     # [c6] ADD A d8
-            lambda: None,     # [c7] RST 00H
-            lambda: None,     # [c8] RET Z
-            lambda: None,     # [c9] RET
-            lambda: None,     # [ca] JP Z a16
+            lambda: self.rst_im8(0x0),          # [c7] RST 00H
+            lambda: self.ret("Z", 1),           # [c8] RET Z
+            lambda: self.ret(),                 # [c9] RET
+            lambda: self.jp_cc_im16("Z", 1),    # [ca] JP Z a16
             lambda: None,     # [cb] PREFIX CB  >> PREFIX FUNCTION
-            lambda: None,     # [cc] CALL Z a16
-            lambda: None,     # [cd] CALL a16
+            lambda: self.call_cc("Z", 1),       # [cc] CALL Z a16
+            lambda: self.call(),                # [cd] CALL a16
             lambda: None,     # [ce] ADC A d8
-            lambda: None,     # [cf] RST 08H
+            lambda: self.rst_im8(0x08),         # [cf] RST 08H
 
             # D0
-            lambda: None,     # [d0] RET NC
-            lambda: None,     # [d1] POP DE
-            lambda: None,     # [d2] JP NC a16
+            lambda: self.ret("C", 0),           # [d0] RET NC
+            lambda: self.pop("DE"),             # [d1] POP DE
+            lambda: self.jp_cc_im16("C", 0),    # [d2] JP NC a16
             lambda: None,     # Not defined.
-            lambda: None,     # [d4] CALL NC a16
-            lambda: None,     # [d5] PUSH DE
+            lambda: self.call_cc("C", 0),       # [d4] CALL NC a16
+            lambda: self.push("DE"),            # [d5] PUSH DE
             lambda: None,     # [d6] SUB d8
-            lambda: None,     # [d7] RST 10H
-            lambda: None,     # [d8] RET C
-            lambda: None,     # [d9] RETI
-            lambda: None,     # [da] JP C a16
+            lambda: self.rst_im8(0x10),         # [d7] RST 10H
+            lambda: self.ret("C", 1),           # [d8] RET C
+            lambda: self.reti(),                # [d9] RETI
+            lambda: self.jp_cc_im16("C", 1),    # [da] JP C a16
             lambda: None,     # Not defined.
-            lambda: None,     # [dc] CALL C a16
+            lambda: self.call_cc("C", 1),       # [dc] CALL C a16
             lambda: None,     # Not defined.
             lambda: None,     # [de] SBC A d8
-            lambda: None,     # [df] RST 18H
+            lambda: self.rst_im8(0x18),         # [df] RST 18H
 
             # E0
-            lambda: self.ld_oim8_r("A"),      # [e0] LDH (a8) A
-            lambda: None,     # [e1] POP HL
-            lambda: self.ld_omr_r("C", "A"),  # [e2] LD (C) A
+            lambda: self.ld_oim8_r("A"),        # [e0] LDH (a8) A
+            lambda: self.pop("HL"),             # [e1] POP HL
+            lambda: self.ld_omr_r("C", "A"),    # [e2] LD (C) A
             lambda: None,     # Not defined.
             lambda: None,     # Not defined.
-            lambda: None,     # [e5] PUSH HL
+            lambda: self.push("HL"),            # [e5] PUSH HL
             lambda: None,     # [e6] AND d8
-            lambda: None,     # [e7] RST 20H
+            lambda: self.rst_im8(0x20),         # [e7] RST 20H
             lambda: None,     # [e8] ADD SP r8
-            lambda: None,     # [e9] JP (HL)
-            lambda: self.ld_mim16_r("A"),     # [ea] LD (a16) A
+            lambda: self.jp_mrc("HL"),          # [e9] JP (HL)
+            lambda: self.ld_mim16_r("A"),       # [ea] LD (a16) A
             lambda: None,     # Not defined.
             lambda: None,     # Not defined.
             lambda: None,     # Not defined.
             lambda: None,     # [ee] XOR d8
-            lambda: None,     # [ef] RST 28H
+            lambda: self.rst_im8(0x28),         # [ef] RST 28H
 
             # F0
-            lambda: self.ld_r_oim8("A"),      # [f0] LDH A (a8)
-            lambda: None,     # [f1] POP AF
-            lambda: self.ld_r_omr("A", "C"),  # [f2] LD A (C)
+            lambda: self.ld_r_oim8("A"),        # [f0] LDH A (a8)
+            lambda: self.pop("AF"),             # [f1] POP AF
+            lambda: self.ld_r_omr("A", "C"),    # [f2] LD A (C)
             lambda: None,     # [f3] DI
             lambda: None,     # Not defined.
-            lambda: None,     # [f5] PUSH AF
+            lambda: self.push("AF"),            # [f5] PUSH AF
             lambda: None,     # [f6] OR d8
-            lambda: None,     # [f7] RST 30H
-            lambda: self.ldhl_sp_im8(),       # [f8] LD HL SP+r8
-            lambda: self.ld_sp_rc("HL"),      # [f9] LD SP HL
-            lambda: self.ld_r_mim16("A"),     # [fa] LD A (a16)
+            lambda: self.rst_im8(0x30),         # [f7] RST 30H
+            lambda: self.ldhl_sp_im8(),         # [f8] LD HL SP+r8
+            lambda: self.ld_sp_rc("HL"),        # [f9] LD SP HL
+            lambda: self.ld_r_mim16("A"),       # [fa] LD A (a16)
             lambda: None,     # [fb] EI
             lambda: None,     # Not defined.
             lambda: None,     # Not defined.
             lambda: None,     # [fe] CP d8
-            lambda: None,     # [ff] RST 38H
+            lambda: self.rst_im8(0x38),         # [ff] RST 38H
         ]
 
     def combo_s(self, rc):
@@ -311,6 +311,11 @@ class InstructionMap(object):
 
     def combo(self, r1, r2):
         return self.c.r[r1] << 8 | self.c.r[r2]
+
+    def get_im16(self):
+        mem = (self.m.read(self.c.pc + 1)) | (self.m.read(self.c.pc + 2) << 8)
+        #mem = (self.m.read(self.c.pc + 1) << 8) | self.m.read(self.c.pc + 2)
+        return mem
 
     def ld_r_im8(self, reg):
         self.c.r[reg] = (self.m.read(self.c.pc + 1)) & 0xFF
@@ -322,11 +327,11 @@ class InstructionMap(object):
         """Load a register with a memory reference in a register combo (e.g. (HL))"""
         self.c.r[r1] = self.m.read(self.combo_s(rc))
 
-    def ld_mrc_r(self, r1, rc):
+    def ld_mrc_r(self, rc, r1):
         self.m.write(self.combo_s(rc), self.c.r[r1])
 
     def ld_r_mim16(self, r1):
-        mem = (self.m.read(self.c.pc + 1) << 8) | self.m.read(self.c.pc + 2)
+        mem = self.get_im16()
         self.c.r[r1] = self.m.read(mem)
 
     def ld_r_im16(self, r1):
@@ -335,12 +340,12 @@ class InstructionMap(object):
 
     def ld_mim16_r(self, r1):
         """Load an immediate memory address with a register value."""
-        mem = (self.m.read(self.c.pc + 1) << 8) | self.m.read(self.c.pc + 2)
+        mem = self.get_im16()
         self.m.write(mem, self.c.r[r1])
 
     def ld_r_omr(self, r1, r2):
         """Load a register with a value at 0xFF00 + r2."""
-        self.c.r[r1] = self.m.read(self.c.r[r2])
+        self.c.r[r1] = self.m.read(0xFF00 + self.c.r[r2])
 
     def ld_omr_r(self, r1, r2):
         self.m.write(0xFF00 + self.c.r[r1], self.c.r[r2])
@@ -369,11 +374,11 @@ class InstructionMap(object):
         # TODO: Implement the flags for this operation.
 
     def ld_sp_im16(self):
-        mem = (self.m.read(self.c.pc + 1) << 8) | self.m.read(self.c.pc + 2)
+        mem = self.get_im16()
         self.c.sp = mem
 
     def ld_mim16_sp(self):
-        mem = (self.m.read(self.c.pc + 1) << 8) | self.m.read(self.c.pc + 2)
+        mem = self.get_im16()
         self.m.write(mem, (self.c.sp >> 8) & 0xFF)
         self.m.write(mem+1, self.c.sp & 0xFF)
 
@@ -381,6 +386,74 @@ class InstructionMap(object):
         mem = self.m.read(self.c.pc + 1)
         self.c.r[rc[0]] = 0
         self.c.r[rc[1]] = mem
+
+    def push(self, rc):
+        """Pushes the value from a register pair on to the stack."""
+        self.m.write(self.c.sp - 1, self.c.r[rc[0]])
+        self.m.write(self.c.sp - 2, self.c.r[rc[1]])
+        self.c.sp -= 2
+
+    def pop(self, rc):
+        """Pops two bytes off of the stack."""
+        self.c.r[rc[1]] = self.m.read(self.c.sp)
+        self.c.r[rc[0]] = self.m.read(self.c.sp+1)
+        self.c.sp += 2
+
+    """
+    Note that for each of the *JUMP* instructions, we subtract the byte size of the instruction
+    to negate the Program Counter increment.
+    """
+
+    def jp_im16(self):
+        self.c.pc = self.get_im16() - 3
+
+    def jp_cc_im16(self, flag, val):
+        f = self.c.f[flag]
+        if f == val:
+            self.c.pc = self.get_im16() - 3
+
+    def jp_mrc(self, rc):
+        self.c.pc = self.m.read(self.combo_s(rc)) - 1
+
+    def jp_oim8(self):
+        new_pc = self.c.pc + self.m.read(self.c.pc + 1) - 2
+
+    def jp_cc_oim8(self, flag, val):
+        f = self.c.f[flag]
+        if f == val:
+            self.c.pc = self.m.read(self.c.pc + 1) - 2
+
+    def call(self):
+        self.m.write(self.c.sp - 1, (self.c.pc >> 8) & 0xFF)
+        self.m.write(self.c.sp - 2, self.c.pc & 0xFF)
+        self.c.sp -= 2
+
+        self.c.pc = self.get_im16() - 3
+
+    def call_cc(self, flag, val):
+        f = self.c.f[flag]
+        if f == val:
+            self.call()
+
+    def rst_im8(self, off):
+        self.m.write(self.c.sp - 1, (self.c.pc >> 8) & 0xFF)
+        self.m.write(self.c.sp - 2, self.c.pc & 0xFF)
+        self.c.sp -= 2
+
+        self.c.pc = off + self.m.read(self.c.pc + 1) - 2
+
+    def ret(self, ):
+        self.c.pc = (self.m.read(self.c.sp + 1) << 8) | self.m.read(self.c.sp) - 1
+        self.c.sp += 2
+
+    def ret_cc(self, flag, val):
+        f = self.c.f[flag]
+        if f == val:
+            self.ret()
+
+    def reti(self):
+        self.ret()
+        self.m.interrupts_enabled = True
 
 
 class CPU(object):
@@ -434,6 +507,36 @@ class CPU(object):
                 continue
 
             data = self.mem.read(self.pc)
+            if data == 0xCB:
+                self._log.debug("[{:02x}] CB not implemented yet.".format(self.pc))
+                skip_instr = self.ops.cb_instructions[self.mem.read(self.pc+1)]
+                self.pc += skip_instr.bytes + 1
+                self._log.debug("Skipped instruction: {}".format(skip_instr))
+                continue
+
             func = self.instructions.map[data]
             instr = self.ops.instructions[data]
+
             self._log.debug("Instruction: 0x{:02x}: [0x{:02x}] -> {}".format(self.pc, data, instr))
+            try:
+                if func:
+                    func()
+                    self.stack_dump()
+            except Exception as e:
+                self.stack_dump()
+                self._log.exception(e)
+
+            self.pc += instr.bytes
+
+    def stack_dump(self):
+        message = ""
+        message += "STACK TRACE " + ("=" * 66) + "\n"
+        message += "Registers: \n"
+        for r in self.r:
+            if self.r[r] is not None:
+                message += "   {}: 0x{:02x}\n".format(r, self.r[r])
+            else:
+                message += "   {}: {}\n".format(r, "ERR")
+        message += "   {}: 0x{:02x}\n".format("sp", self.sp)
+        message += "   {}: 0x{:02x}\n".format("pc", self.pc)
+        self._log.error(message)
