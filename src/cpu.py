@@ -1,3 +1,5 @@
+import logging
+
 
 class InstructionMap(object):
     
@@ -16,49 +18,49 @@ class InstructionMap(object):
     def _prepare_instruction_map(self):
         self.map = [
             # 00
-            lambda: None,     # [00] NOP
-            lambda: None,     # [01] LD BC d16
-            lambda: None,     # [02] LD (BC) A
-            lambda: None,     # [03] INC BC
-            lambda: None,     # [04] INC B
-            lambda: None,     # [05] DEC B
-            lambda: None,     # [06] LD B d8
-            lambda: None,     # [07] RLCA
-            lambda: None,     # [08] LD (a16) SP
-            lambda: None,     # [09] ADD HL BC
-            lambda: None,     # [0a] LD A (BC)
-            lambda: None,     # [0b] DEC BC
-            lambda: None,     # [0c] INC C
-            lambda: None,     # [0d] DEC C
-            lambda: None,     # [0e] LD C d8
-            lambda: None,     # [0f] RRCA
+            lambda: None,                       # [00] NOP
+            lambda: self.ld_rc_im16("BC"),      # [01] LD BC d16
+            lambda: self.ld_mrc_r("BC", "A"),   # [02] LD (BC) A
+            lambda: None,                       # [03] INC BC
+            lambda: None,                       # [04] INC B
+            lambda: None,                       # [05] DEC B
+            lambda: self.ld_r_im8("B"),         # [06] LD B d8
+            lambda: None,                       # [07] RLCA
+            lambda: self.ld_mim16_sp(),         # [08] LD (a16) SP
+            lambda: None,                       # [09] ADD HL BC
+            lambda: self.ld_r_mrc("A", "BC"),   # [0a] LD A (BC)
+            lambda: None,                       # [0b] DEC BC
+            lambda: None,                       # [0c] INC C
+            lambda: None,                       # [0d] DEC C
+            lambda: self.ld_r_im8("C"),         # [0e] LD C d8
+            lambda: None,                       # [0f] RRCA
 
             # 10
             lambda: None,     # [10] STOP 0
-            lambda: None,     # [11] LD DE d16
-            lambda: None,     # [12] LD (DE) A
+            lambda: self.ld_rc_im16("DE"),      # [11] LD DE d16
+            lambda: self.ld_mrc_r("DE", "A"),   # [12] LD (DE) A
             lambda: None,     # [13] INC DE
             lambda: None,     # [14] INC D
             lambda: None,     # [15] DEC D
-            lambda: None,     # [16] LD D d8
+            lambda: self.ld_r_im8("D"),         # [16] LD D d8
             lambda: None,     # [17] RLA
             lambda: None,     # [18] JR r8
             lambda: None,     # [19] ADD HL DE
-            lambda: None,     # [1a] LD A (DE)
+            lambda: self.ld_r_mrc("A", "DE"),   # [1a] LD A (DE)
             lambda: None,     # [1b] DEC DE
             lambda: None,     # [1c] INC E
             lambda: None,     # [1d] DEC E
-            lambda: None,     # [1e] LD E d8
+            lambda: self.ld_r_im8("E"),         # [1e] LD E d8
             lambda: None,     # [1f] RRA
 
             # 20
             lambda: None,     # [20] JR NZ r8
-            lambda: None,     # [21] LD HL d16
-            lambda: None,     # [22] LD (HL+) A
+            lambda: self.ld_rc_im16("HL"),      # [21] LD HL d16
+            lambda: None,     # [22] LD (HL+) A TODO
             lambda: None,     # [23] INC HL
             lambda: None,     # [24] INC H
             lambda: None,     # [25] DEC H
-            lambda: None,     # [26] LD H d8
+            lambda:  self.ld_r_im8("H"),       # [26] LD H d8
             lambda: None,     # [27] DAA
             lambda: None,     # [28] JR Z r8
             lambda: None,     # [29] ADD HL HL
@@ -66,98 +68,98 @@ class InstructionMap(object):
             lambda: None,     # [2b] DEC HL
             lambda: None,     # [2c] INC L
             lambda: None,     # [2d] DEC L
-            lambda: None,     # [2e] LD L d8
+            lambda:  self.ld_r_im8("L"),       # [2e] LD L d8
             lambda: None,     # [2f] CPL
 
             # 30
             lambda: None,     # [30] JR NC r8
-            lambda: None,     # [31] LD SP d16
-            lambda: None,     # [32] LD (HL-) A
+            lambda: self.ld_sp_im16(),         # [31] LD SP d16
+            lambda: None,     # [32] LD (HL-) A TODO
             lambda: None,     # [33] INC SP
             lambda: None,     # [34] INC (HL)
             lambda: None,     # [35] DEC (HL)
-            lambda: None,     # [36] LD (HL) d8
+            lambda: self.ld_mrc_im8("HL"),     # [36] LD (HL) d8
             lambda: None,     # [37] SCF
             lambda: None,     # [38] JR C r8
             lambda: None,     # [39] ADD HL SP
-            lambda: None,     # [3a] LD A (HL-)
+            lambda: None,     # [3a] LD A (HL-) TODO
             lambda: None,     # [3b] DEC SP
             lambda: None,     # [3c] INC A
             lambda: None,     # [3d] DEC A
-            lambda: None,     # [3e] LD A d8
+            lambda: self.ld_r_im8("A"),        # [3e] LD A d8
             lambda: None,     # [3f] CCF
 
             # 40
-            lambda: None,     # [40] LD B B
-            lambda: None,     # [41] LD B C
-            lambda: None,     # [42] LD B D
-            lambda: None,     # [43] LD B E
-            lambda: None,     # [44] LD B H
-            lambda: None,     # [45] LD B L
-            lambda: None,     # [46] LD B (HL)
-            lambda: None,     # [47] LD B A
-            lambda: None,     # [48] LD C B
-            lambda: None,     # [49] LD C C
-            lambda: None,     # [4a] LD C D
-            lambda: None,     # [4b] LD C E
-            lambda: None,     # [4c] LD C H
-            lambda: None,     # [4d] LD C L
-            lambda: None,     # [4e] LD C (HL)
-            lambda: None,     # [4f] LD C A
+            lambda: self.ld_r_r("B", "B"),     # [40] LD B B
+            lambda: self.ld_r_r("B", "C"),     # [41] LD B C
+            lambda: self.ld_r_r("B", "D"),     # [42] LD B D
+            lambda: self.ld_r_r("B", "E"),     # [43] LD B E
+            lambda: self.ld_r_r("B", "H"),     # [44] LD B H
+            lambda: self.ld_r_r("B", "L"),     # [45] LD B L
+            lambda: self.ld_r_mrc("B", "HL"),  # [46] LD B (HL)
+            lambda: self.ld_r_r("B", "A"),     # [47] LD B A
+            lambda: self.ld_r_r("C", "B"),     # [48] LD C B
+            lambda: self.ld_r_r("C", "C"),     # [49] LD C C
+            lambda: self.ld_r_r("C", "D"),     # [4a] LD C D
+            lambda: self.ld_r_r("C", "E"),     # [4b] LD C E
+            lambda: self.ld_r_r("C", "H"),     # [4c] LD C H
+            lambda: self.ld_r_r("C", "L"),     # [4d] LD C L
+            lambda: self.ld_r_mrc("C", "HL"),  # [4e] LD C (HL)
+            lambda: self.ld_r_r("C", "A"),     # [4f] LD C A
 
             # 50
-            lambda: None,     # [50] LD D B
-            lambda: None,     # [51] LD D C
-            lambda: None,     # [52] LD D D
-            lambda: None,     # [53] LD D E
-            lambda: None,     # [54] LD D H
-            lambda: None,     # [55] LD D L
-            lambda: None,     # [56] LD D (HL)
-            lambda: None,     # [57] LD D A
-            lambda: None,     # [58] LD E B
-            lambda: None,     # [59] LD E C
-            lambda: None,     # [5a] LD E D
-            lambda: None,     # [5b] LD E E
-            lambda: None,     # [5c] LD E H
-            lambda: None,     # [5d] LD E L
-            lambda: None,     # [5e] LD E (HL)
-            lambda: None,     # [5f] LD E A
+            lambda: self.ld_r_r("D", "B"),     # [50] LD D B
+            lambda: self.ld_r_r("D", "C"),     # [51] LD D C
+            lambda: self.ld_r_r("D", "D"),     # [52] LD D D
+            lambda: self.ld_r_r("D", "E"),     # [53] LD D E
+            lambda: self.ld_r_r("D", "H"),     # [54] LD D H
+            lambda: self.ld_r_r("D", "L"),     # [55] LD D L
+            lambda: self.ld_r_mrc("D", "HL"),  # [56] LD D (HL)
+            lambda: self.ld_r_r("D", "A"),     # [57] LD D A
+            lambda: self.ld_r_r("E", "B"),     # [58] LD E B
+            lambda: self.ld_r_r("E", "C"),     # [59] LD E C
+            lambda: self.ld_r_r("E", "D"),     # [5a] LD E D
+            lambda: self.ld_r_r("E", "E"),     # [5b] LD E E
+            lambda: self.ld_r_r("E", "H"),     # [5c] LD E H
+            lambda: self.ld_r_r("E", "L"),     # [5d] LD E L
+            lambda: self.ld_r_mrc("E", "HL"),  # [5e] LD E (HL)
+            lambda: self.ld_r_r("E", "A"),     # [5f] LD E A
 
             # 60
-            lambda: None,     # [60] LD H B
-            lambda: None,     # [61] LD H C
-            lambda: None,     # [62] LD H D
-            lambda: None,     # [63] LD H E
-            lambda: None,     # [64] LD H H
-            lambda: None,     # [65] LD H L
-            lambda: None,     # [66] LD H (HL)
-            lambda: None,     # [67] LD H A
-            lambda: None,     # [68] LD L B
-            lambda: None,     # [69] LD L C
-            lambda: None,     # [6a] LD L D
-            lambda: None,     # [6b] LD L E
-            lambda: None,     # [6c] LD L H
-            lambda: None,     # [6d] LD L L
-            lambda: None,     # [6e] LD L (HL)
-            lambda: None,     # [6f] LD L A
+            lambda: self.ld_r_r("H", "B"),     # [60] LD H B
+            lambda: self.ld_r_r("H", "C"),     # [61] LD H C
+            lambda: self.ld_r_r("H", "D"),     # [62] LD H D
+            lambda: self.ld_r_r("H", "E"),     # [63] LD H E
+            lambda: self.ld_r_r("H", "H"),     # [64] LD H H
+            lambda: self.ld_r_r("H", "L"),     # [65] LD H L
+            lambda: self.ld_r_mrc("H", "HL"),  # [66] LD H (HL)
+            lambda: self.ld_r_r("H", "A"),     # [67] LD H A
+            lambda: self.ld_r_r("L", "B"),     # [68] LD L B
+            lambda: self.ld_r_r("L", "C"),     # [69] LD L C
+            lambda: self.ld_r_r("L", "D"),     # [6a] LD L D
+            lambda: self.ld_r_r("L", "E"),     # [6b] LD L E
+            lambda: self.ld_r_r("L", "H"),     # [6c] LD L H
+            lambda: self.ld_r_r("L", "L"),     # [6d] LD L L
+            lambda: self.ld_r_mrc("L", "HL"),  # [6e] LD L (HL)
+            lambda: self.ld_r_r("L", "A"),     # [6f] LD L A
 
             # 70
-            lambda: None,     # [70] LD (HL) B
-            lambda: None,     # [71] LD (HL) C
-            lambda: None,     # [72] LD (HL) D
-            lambda: None,     # [73] LD (HL) E
-            lambda: None,     # [74] LD (HL) H
-            lambda: None,     # [75] LD (HL) L
+            lambda: self.ld_mrc_r("HL", "B"),  # [70] LD (HL) B
+            lambda: self.ld_mrc_r("HL", "C"),  # [71] LD (HL) C
+            lambda: self.ld_mrc_r("HL", "D"),  # [72] LD (HL) D
+            lambda: self.ld_mrc_r("HL", "E"),  # [73] LD (HL) E
+            lambda: self.ld_mrc_r("HL", "H"),  # [74] LD (HL) H
+            lambda: self.ld_mrc_r("HL", "L"),  # [75] LD (HL) L
             lambda: None,     # [76] HALT
-            lambda: None,     # [77] LD (HL) A
-            lambda: None,     # [78] LD A B
-            lambda: None,     # [79] LD A C
-            lambda: None,     # [7a] LD A D
-            lambda: None,     # [7b] LD A E
-            lambda: None,     # [7c] LD A H
-            lambda: None,     # [7d] LD A L
-            lambda: None,     # [7e] LD A (HL)
-            lambda: None,     # [7f] LD A A
+            lambda: self.ld_mrc_r("HL", "A"),  # [77] LD (HL) A
+            lambda: self.ld_r_r("A", "B"),     # [78] LD A B
+            lambda: self.ld_r_r("A", "C"),     # [79] LD A C
+            lambda: self.ld_r_r("A", "D"),     # [7a] LD A D
+            lambda: self.ld_r_r("A", "E"),     # [7b] LD A E
+            lambda: self.ld_r_r("A", "H"),     # [7c] LD A H
+            lambda: self.ld_r_r("A", "L"),     # [7d] LD A L
+            lambda: self.ld_r_mrc("A", "HL"),  # [7e] LD A (HL)
+            lambda: self.ld_r_r("A", "A"),     # [7f] LD A A
 
             # 80
             lambda: None,     # [80] ADD A B
@@ -268,9 +270,9 @@ class InstructionMap(object):
             lambda: None,     # [df] RST 18H
 
             # E0
-            lambda: None,     # [e0] LDH (a8) A
+            lambda: self.ld_oim8_r("A"),      # [e0] LDH (a8) A
             lambda: None,     # [e1] POP HL
-            lambda: None,     # [e2] LD (C) A
+            lambda: self.ld_omr_r("C", "A"),  # [e2] LD (C) A
             lambda: None,     # Not defined.
             lambda: None,     # Not defined.
             lambda: None,     # [e5] PUSH HL
@@ -278,7 +280,7 @@ class InstructionMap(object):
             lambda: None,     # [e7] RST 20H
             lambda: None,     # [e8] ADD SP r8
             lambda: None,     # [e9] JP (HL)
-            lambda: None,     # [ea] LD (a16) A
+            lambda: self.ld_mim16_r("A"),     # [ea] LD (a16) A
             lambda: None,     # Not defined.
             lambda: None,     # Not defined.
             lambda: None,     # Not defined.
@@ -286,17 +288,17 @@ class InstructionMap(object):
             lambda: None,     # [ef] RST 28H
 
             # F0
-            lambda: None,     # [f0] LDH A (a8)
+            lambda: self.ld_r_oim8("A"),      # [f0] LDH A (a8)
             lambda: None,     # [f1] POP AF
-            lambda: None,     # [f2] LD A (C)
+            lambda: self.ld_r_omr("A", "C"),  # [f2] LD A (C)
             lambda: None,     # [f3] DI
             lambda: None,     # Not defined.
             lambda: None,     # [f5] PUSH AF
             lambda: None,     # [f6] OR d8
             lambda: None,     # [f7] RST 30H
-            lambda: None,     # [f8] LD HL SP+r8
-            lambda: None,     # [f9] LD SP HL
-            lambda: None,     # [fa] LD A (a16)
+            lambda: self.ldhl_sp_im8(),       # [f8] LD HL SP+r8
+            lambda: self.ld_sp_rc("HL"),      # [f9] LD SP HL
+            lambda: self.ld_r_mim16("A"),     # [fa] LD A (a16)
             lambda: None,     # [fb] EI
             lambda: None,     # Not defined.
             lambda: None,     # Not defined.
@@ -310,8 +312,8 @@ class InstructionMap(object):
     def combo(self, r1, r2):
         return self.c.r[r1] << 8 | self.c.r[r2]
 
-    def ld_r_8b(self, reg, val):
-        self.c.r[reg] = val & 0xFF
+    def ld_r_im8(self, reg):
+        self.c.r[reg] = (self.m.read(self.c.pc + 1)) & 0xFF
 
     def ld_r_r(self, r1, r2):
         self.c.r[r1] = self.c.r[r2]
@@ -360,29 +362,43 @@ class InstructionMap(object):
         """The immediate value is signed."""
         n = self.m.read(self.c.pc + 1)
         if n > 127:
-            n = -((~n+1)&255)
+            n = -((~n + 1) & 255)
         n += self.c.sp
         self.c.r["H"] = (n >> 8) & 0xFF
         self.c.r["L"] = n & 0xFF
         # TODO: Implement the flags for this operation.
+
+    def ld_sp_im16(self):
+        mem = (self.m.read(self.c.pc + 1) << 8) | self.m.read(self.c.pc + 2)
+        self.c.sp = mem
 
     def ld_mim16_sp(self):
         mem = (self.m.read(self.c.pc + 1) << 8) | self.m.read(self.c.pc + 2)
         self.m.write(mem, (self.c.sp >> 8) & 0xFF)
         self.m.write(mem+1, self.c.sp & 0xFF)
 
+    def ld_mrc_im8(self, rc):
+        mem = self.m.read(self.c.pc + 1)
+        self.c.r[rc[0]] = 0
+        self.c.r[rc[1]] = mem
+
+
 class CPU(object):
 
-    def __init__(self, cart, mem):
+    def __init__(self, cart, mem, ops):
         """
         :type cart: Cartridge
         :type mem: MemoryController
+        :type ops: OpcodeParser
         :param cart: The loaded Cartridge
         :param mem: The memory unit, which we will use for access.
+        :param ops: The OpcodeParser which will provide timing and instruction information
         :return:
         """
         self.cart = cart
         self.mem = mem
+        self.ops = ops
+        self._log = logging.getLogger("CPU")
         self.halt = False
         self.r = {
             "A": 0,
@@ -395,14 +411,16 @@ class CPU(object):
             "L": 0,
         }
 
-        self.sp = 0xFFFE # Per GBCPUMan page 64
-        self.pc = 0x100  # We start at 100.
+        self.sp = 0xFFFE    # Per GBCPUMan page 64
+        self.pc = 0x100      # We start at 100.
         self.f = {
-            "Z": 0, # Zero bit
-            "N": 0, # Subtract
-            "H": 0, # Half-carry
-            "C": 0, # Carry
+            "Z": 0,   # Zero bit
+            "N": 0,   # Subtract
+            "H": 0,   # Half-carry
+            "C": 0,   # Carry
         }
+
+        self.instructions = InstructionMap(self, self.mem)
 
     def run(self):
 
@@ -415,3 +433,7 @@ class CPU(object):
                 # on page 20 of the Gameboy CPU manual.
                 continue
 
+            data = self.mem.read(self.pc)
+            func = self.instructions.map[data]
+            instr = self.ops.instructions[data]
+            self._log.debug("Instruction: 0x{:02x}: [0x{:02x}] -> {}".format(self.pc, data, instr))
