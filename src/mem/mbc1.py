@@ -28,7 +28,7 @@ class MBC1(MemoryController):
         if 0xA000 <= byte <= 0xBFFF:
             return self._read_external_memory(byte - 0xA000)
 
-        super().read(byte)
+        return super().read(byte)
 
     def write(self, byte, value, size=1):
 
