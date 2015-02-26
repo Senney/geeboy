@@ -54,7 +54,8 @@ class MemoryController(object):
 
         # Internal Memory
         if 0xC000 <= byte <= 0xDFFF:
-            return self._imem[byte-0xC000]
+            val = self._imem[byte-0xC000]
+            return val
 
         # Reserved Memory
         if 0xE000 <= byte <= 0xFDFF:
@@ -79,8 +80,38 @@ class MemoryController(object):
         if byte == 0xFFFF:
             return 1 if self.interrupts_enabled else 0
 
+        return 0xFF
+
     def write(self, byte, value, size=1):
-        raise NotImplementedError("Cannot write. No ROM or RAM defined.")
+        # Video Memory
+        if 0x8000 <= byte <= 0x9FFF:
+            self._video[byte-0x8000] = value
+
+        # Internal Memory
+        if 0xC000 <= byte <= 0xDFFF:
+            self._imem[byte-0xC000] = value
+
+        # Reserved Memory
+        if 0xE000 <= byte <= 0xFDFF:
+            raise MemoryAccessDeniedError("Cannot write to ECHO RAM")
+
+        # Unused Memory
+        if 0xFEA0 <= byte <= 0xFEFF:
+            raise MemoryAccessDeniedError("Cannot write to Unused Memory")
+
+        # Hardware Registers
+        if 0xFF00 <= byte <= 0xFF7F:
+            raise NotImplementedError("Hardware registers are not implemented yet.")
+
+        # High memory
+        if 0xFF80 <= byte <= 0xFFFE:
+            self._hmem[byte - 0xFF80] = value
+
+        # Interrupt Enabled register
+        if byte == 0xFFFF:
+            self.interrupts_enabled = 1 if value == 0x1 else 0
+
+        return None
 
     def check_bit(self, byte, bit):
         mask = 1 << bit
