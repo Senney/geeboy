@@ -22,7 +22,7 @@ class InstructionMap(object):
             lambda: self.ld_rc_im16("BC"),      # [01] LD BC d16
             lambda: self.ld_mrc_r("BC", "A"),   # [02] LD (BC) A
             lambda: None,                       # [03] INC BC
-            lambda: None,                       # [04] INC B
+            lambda: self.inc_r("B"),            # [04] INC B
             lambda: None,                       # [05] DEC B
             lambda: self.ld_r_im8("B"),         # [06] LD B d8
             lambda: None,                       # [07] RLCA
@@ -30,7 +30,7 @@ class InstructionMap(object):
             lambda: None,                       # [09] ADD HL BC
             lambda: self.ld_r_mrc("A", "BC"),   # [0a] LD A (BC)
             lambda: None,                       # [0b] DEC BC
-            lambda: None,                       # [0c] INC C
+            lambda: self.inc_r("C"),            # [0c] INC C
             lambda: None,                       # [0d] DEC C
             lambda: self.ld_r_im8("C"),         # [0e] LD C d8
             lambda: None,                       # [0f] RRCA
@@ -40,7 +40,7 @@ class InstructionMap(object):
             lambda: self.ld_rc_im16("DE"),      # [11] LD DE d16
             lambda: self.ld_mrc_r("DE", "A"),   # [12] LD (DE) A
             lambda: None,     # [13] INC DE
-            lambda: None,     # [14] INC D
+            lambda: self.inc_r("D"),              # [14] INC D
             lambda: None,     # [15] DEC D
             lambda: self.ld_r_im8("D"),         # [16] LD D d8
             lambda: None,     # [17] RLA
@@ -48,7 +48,7 @@ class InstructionMap(object):
             lambda: None,     # [19] ADD HL DE
             lambda: self.ld_r_mrc("A", "DE"),   # [1a] LD A (DE)
             lambda: None,     # [1b] DEC DE
-            lambda: None,     # [1c] INC E
+            lambda: self.inc_r("E"),            # [1c] INC E
             lambda: None,     # [1d] DEC E
             lambda: self.ld_r_im8("E"),         # [1e] LD E d8
             lambda: None,     # [1f] RRA
@@ -56,17 +56,17 @@ class InstructionMap(object):
             # 20
             lambda: self.jp_cc_oim8("Z", 0),    # [20] JR NZ r8
             lambda: self.ld_rc_im16("HL"),      # [21] LD HL d16
-            lambda: None,     # [22] LD (HL+) A TODO
+            lambda: self.ld_hli_r("A"),         # [22] LD (HL+) A
             lambda: None,     # [23] INC HL
-            lambda: None,     # [24] INC H
+            lambda: self.inc_r("H"),           # [24] INC H
             lambda: None,     # [25] DEC H
             lambda: self.ld_r_im8("H"),        # [26] LD H d8
             lambda: None,     # [27] DAA
             lambda: self.jp_cc_oim8("Z", 1),   # [28] JR Z r8
             lambda: None,     # [29] ADD HL HL
-            lambda: None,     # [2a] LD A (HL+)
+            lambda: self.ld_r_hli("A"),        # [2a] LD A (HL+)
             lambda: None,     # [2b] DEC HL
-            lambda: None,     # [2c] INC L
+            lambda: self.inc_r("L"),           # [2c] INC L
             lambda: None,     # [2d] DEC L
             lambda: self.ld_r_im8("L"),        # [2e] LD L d8
             lambda: None,     # [2f] CPL
@@ -74,17 +74,17 @@ class InstructionMap(object):
             # 30
             lambda: self.jp_cc_oim8("C", 0),   # [30] JR NC r8
             lambda: self.ld_sp_im16(),         # [31] LD SP d16
-            lambda: None,     # [32] LD (HL-) A TODO
+            lambda: self.ld_hld_r("A"),        # [32] LD (HL-) A
             lambda: None,     # [33] INC SP
-            lambda: None,     # [34] INC (HL)
+            lambda: self.inc_mrc("HL"),        # [34] INC (HL)
             lambda: None,     # [35] DEC (HL)
             lambda: self.ld_mrc_im8("HL"),     # [36] LD (HL) d8
             lambda: None,     # [37] SCF
             lambda: self.jp_cc_oim8("C", 1),   # [38] JR C r8
             lambda: None,     # [39] ADD HL SP
-            lambda: None,     # [3a] LD A (HL-) TODO
+            lambda: self.ld_r_hld("A"),        # [3a] LD A (HL-)
             lambda: None,     # [3b] DEC SP
-            lambda: None,     # [3c] INC A
+            lambda: self.inc_r("A"),           # [3c] INC A
             lambda: None,     # [3d] DEC A
             lambda: self.ld_r_im8("A"),        # [3e] LD A d8
             lambda: None,     # [3f] CCF
@@ -162,129 +162,129 @@ class InstructionMap(object):
             lambda: self.ld_r_r("A", "A"),     # [7f] LD A A
 
             # 80
-            lambda: None,     # [80] ADD A B
-            lambda: None,     # [81] ADD A C
-            lambda: None,     # [82] ADD A D
-            lambda: None,     # [83] ADD A E
-            lambda: None,     # [84] ADD A H
-            lambda: None,     # [85] ADD A L
-            lambda: None,     # [86] ADD A (HL)
-            lambda: None,     # [87] ADD A A
-            lambda: None,     # [88] ADC A B
-            lambda: None,     # [89] ADC A C
-            lambda: None,     # [8a] ADC A D
-            lambda: None,     # [8b] ADC A E
-            lambda: None,     # [8c] ADC A H
-            lambda: None,     # [8d] ADC A L
-            lambda: None,     # [8e] ADC A (HL)
-            lambda: None,     # [8f] ADC A A
+            lambda: self.add_r_r("A", "B"),    # [80] ADD A B
+            lambda: self.add_r_r("A", "C"),    # [81] ADD A C
+            lambda: self.add_r_r("A", "D"),    # [82] ADD A D
+            lambda: self.add_r_r("A", "E"),    # [83] ADD A E
+            lambda: self.add_r_r("A", "H"),    # [84] ADD A H
+            lambda: self.add_r_r("A", "L"),    # [85] ADD A L
+            lambda: self.add_r_mrc("A", "HL"),  # [86] ADD A (HL)
+            lambda: self.add_r_r("A", "A"),    # [87] ADD A A
+            lambda: self.adc_r_r("A", "B"),    # [88] ADC A B
+            lambda: self.adc_r_r("A", "C"),    # [89] ADC A C
+            lambda: self.adc_r_r("A", "D"),    # [8a] ADC A D
+            lambda: self.adc_r_r("A", "E"),    # [8b] ADC A E
+            lambda: self.adc_r_r("A", "H"),    # [8c] ADC A H
+            lambda: self.adc_r_r("A", "L"),    # [8d] ADC A L
+            lambda: self.adc_r_mrc("A", "HL"),    # [8e] ADC A (HL)
+            lambda: self.adc_r_r("A", "A"),    # [8f] ADC A A
 
             # 90
-            lambda: None,     # [90] SUB B
-            lambda: None,     # [91] SUB C
-            lambda: None,     # [92] SUB D
-            lambda: None,     # [93] SUB E
-            lambda: None,     # [94] SUB H
-            lambda: None,     # [95] SUB L
-            lambda: None,     # [96] SUB (HL)
-            lambda: None,     # [97] SUB A
-            lambda: None,     # [98] SBC A B
-            lambda: None,     # [99] SBC A C
-            lambda: None,     # [9a] SBC A D
-            lambda: None,     # [9b] SBC A E
-            lambda: None,     # [9c] SBC A H
-            lambda: None,     # [9d] SBC A L
-            lambda: None,     # [9e] SBC A (HL)
-            lambda: None,     # [9f] SBC A A
+            lambda: self.sub_r_r("A", "B"),    # [90] SUB B
+            lambda: self.sub_r_r("A", "C"),    # [91] SUB C
+            lambda: self.sub_r_r("A", "D"),    # [92] SUB D
+            lambda: self.sub_r_r("A", "E"),    # [93] SUB E
+            lambda: self.sub_r_r("A", "H"),    # [94] SUB H
+            lambda: self.sub_r_r("A", "L"),    # [95] SUB L
+            lambda: self.sub_r_mrc("A", "HL"),    # [96] SUB (HL)
+            lambda: self.sub_r_r("A", "A"),    # [97] SUB A
+            lambda: self.sbc_r_r("A", "B"),    # [98] SBC A B
+            lambda: self.sbc_r_r("A", "C"),    # [99] SBC A C
+            lambda: self.sbc_r_r("A", "D"),    # [9a] SBC A D
+            lambda: self.sbc_r_r("A", "E"),    # [9b] SBC A E
+            lambda: self.sbc_r_r("A", "H"),    # [9c] SBC A H
+            lambda: self.sbc_r_r("A", "L"),    # [9d] SBC A L
+            lambda: self.sbc_r_mrc("A", "HL"),    # [9e] SBC A (HL)
+            lambda: self.sbc_r_r("A", "A"),    # [9f] SBC A A
 
             # A0
-            lambda: None,     # [a0] AND B
-            lambda: None,     # [a1] AND C
-            lambda: None,     # [a2] AND D
-            lambda: None,     # [a3] AND E
-            lambda: None,     # [a4] AND H
-            lambda: None,     # [a5] AND L
-            lambda: None,     # [a6] AND (HL)
-            lambda: None,     # [a7] AND A
-            lambda: None,     # [a8] XOR B
-            lambda: None,     # [a9] XOR C
-            lambda: None,     # [aa] XOR D
-            lambda: None,     # [ab] XOR E
-            lambda: None,     # [ac] XOR H
-            lambda: None,     # [ad] XOR L
-            lambda: None,     # [ae] XOR (HL)
-            lambda: None,     # [af] XOR A
+            lambda: self.and_r_r("A", "B"),    # [a0] AND B
+            lambda: self.and_r_r("A", "C"),    # [a1] AND C
+            lambda: self.and_r_r("A", "D"),    # [a2] AND D
+            lambda: self.and_r_r("A", "E"),    # [a3] AND E
+            lambda: self.and_r_r("A", "H"),    # [a4] AND H
+            lambda: self.and_r_r("A", "L"),    # [a5] AND L
+            lambda: self.and_r_mrc("A", "HL"),  # [a6] AND (HL)
+            lambda: self.and_r_r("A", "A"),    # [a7] AND A
+            lambda: self.xor_r_r("A", "B"),    # [a8] XOR B
+            lambda: self.xor_r_r("A", "C"),    # [a9] XOR C
+            lambda: self.xor_r_r("A", "D"),    # [aa] XOR D
+            lambda: self.xor_r_r("A", "E"),    # [ab] XOR E
+            lambda: self.xor_r_r("A", "H"),    # [ac] XOR H
+            lambda: self.xor_r_r("A", "L"),    # [ad] XOR L
+            lambda: self.xor_r_mrc("A", "HL"),  # [ae] XOR (HL)
+            lambda: self.xor_r_r("A", "A"),    # [af] XOR A
 
             # B0
-            lambda: None,     # [b0] OR B
-            lambda: None,     # [b1] OR C
-            lambda: None,     # [b2] OR D
-            lambda: None,     # [b3] OR E
-            lambda: None,     # [b4] OR H
-            lambda: None,     # [b5] OR L
-            lambda: None,     # [b6] OR (HL)
-            lambda: None,     # [b7] OR A
-            lambda: None,     # [b8] CP B
-            lambda: None,     # [b9] CP C
-            lambda: None,     # [ba] CP D
-            lambda: None,     # [bb] CP E
-            lambda: None,     # [bc] CP H
-            lambda: None,     # [bd] CP L
-            lambda: None,     # [be] CP (HL)
-            lambda: None,     # [bf] CP A
+            lambda: self.or_r_r("A", "B"),     # [b0] OR B
+            lambda: self.or_r_r("A", "C"),     # [b1] OR C
+            lambda: self.or_r_r("A", "D"),     # [b2] OR D
+            lambda: self.or_r_r("A", "E"),     # [b3] OR E
+            lambda: self.or_r_r("A", "H"),     # [b4] OR H
+            lambda: self.or_r_r("A", "L"),     # [b5] OR L
+            lambda: self.or_r_mrc("A", "HL"),  # [b6] OR (HL)
+            lambda: self.or_r_r("A", "A"),     # [b7] OR A
+            lambda: self.cp_r_r("A", "B"),     # [b8] CP B
+            lambda: self.cp_r_r("A", "C"),     # [b9] CP C
+            lambda: self.cp_r_r("A", "D"),     # [ba] CP D
+            lambda: self.cp_r_r("A", "E"),     # [bb] CP E
+            lambda: self.cp_r_r("A", "H"),     # [bc] CP H
+            lambda: self.cp_r_r("A", "L"),     # [bd] CP L
+            lambda: self.cp_r_mrc("A", "HL"),  # [be] CP (HL)
+            lambda: self.cp_r_r("A", "A"),     # [bf] CP A
 
             # C0
-            lambda: self.ret("Z", 0),           # [c0] RET NZ
+            lambda: self.ret_cc("Z", 0),        # [c0] RET NZ
             lambda: self.pop("BC"),             # [c1] POP BC
-            lambda: None,     # [c2] JP NZ a16
+            lambda: self.jp_cc_im16("Z", 0),    # [c2] JP NZ a16
             lambda: self.jp_im16(),             # [c3] JP a16
-            lambda: self.call("Z", 0),          # [c4] CALL NZ a16
+            lambda: self.call_cc("Z", 0),       # [c4] CALL NZ a16
             lambda: self.push("BC"),            # [c5] PUSH BC
-            lambda: None,     # [c6] ADD A d8
+            lambda: self.add_r_im8("A"),        # [c6] ADD A d8
             lambda: self.rst_im8(0x0),          # [c7] RST 00H
-            lambda: self.ret("Z", 1),           # [c8] RET Z
+            lambda: self.ret_cc("Z", 1),        # [c8] RET Z
             lambda: self.ret(),                 # [c9] RET
             lambda: self.jp_cc_im16("Z", 1),    # [ca] JP Z a16
             lambda: None,     # [cb] PREFIX CB  >> PREFIX FUNCTION
             lambda: self.call_cc("Z", 1),       # [cc] CALL Z a16
             lambda: self.call(),                # [cd] CALL a16
-            lambda: None,     # [ce] ADC A d8
+            lambda: self.adc_r_im8("A"),        # [ce] ADC A d8
             lambda: self.rst_im8(0x08),         # [cf] RST 08H
 
             # D0
-            lambda: self.ret("C", 0),           # [d0] RET NC
+            lambda: self.ret_cc("C", 0),        # [d0] RET NC
             lambda: self.pop("DE"),             # [d1] POP DE
             lambda: self.jp_cc_im16("C", 0),    # [d2] JP NC a16
-            lambda: None,     # Not defined.
+            lambda: None,                       # Not defined.
             lambda: self.call_cc("C", 0),       # [d4] CALL NC a16
             lambda: self.push("DE"),            # [d5] PUSH DE
-            lambda: None,     # [d6] SUB d8
+            lambda: self.sub_r_im8("A"),        # [d6] SUB d8
             lambda: self.rst_im8(0x10),         # [d7] RST 10H
-            lambda: self.ret("C", 1),           # [d8] RET C
+            lambda: self.ret_cc("C", 1),        # [d8] RET C
             lambda: self.reti(),                # [d9] RETI
             lambda: self.jp_cc_im16("C", 1),    # [da] JP C a16
-            lambda: None,     # Not defined.
+            lambda: None,                       # Not defined.
             lambda: self.call_cc("C", 1),       # [dc] CALL C a16
-            lambda: None,     # Not defined.
-            lambda: None,     # [de] SBC A d8
+            lambda: None,                       # Not defined.
+            lambda: self.sbc_r_im8("A"),        # [de] SBC A d8
             lambda: self.rst_im8(0x18),         # [df] RST 18H
 
             # E0
             lambda: self.ld_oim8_r("A"),        # [e0] LDH (a8) A
             lambda: self.pop("HL"),             # [e1] POP HL
             lambda: self.ld_omr_r("C", "A"),    # [e2] LD (C) A
-            lambda: None,     # Not defined.
-            lambda: None,     # Not defined.
+            lambda: None,                       # Not defined.
+            lambda: None,                       # Not defined.
             lambda: self.push("HL"),            # [e5] PUSH HL
-            lambda: None,     # [e6] AND d8
+            lambda: self.and_r_im8("A"),        # [e6] AND d8
             lambda: self.rst_im8(0x20),         # [e7] RST 20H
             lambda: None,     # [e8] ADD SP r8
             lambda: self.jp_mrc("HL"),          # [e9] JP (HL)
             lambda: self.ld_mim16_r("A"),       # [ea] LD (a16) A
-            lambda: None,     # Not defined.
-            lambda: None,     # Not defined.
-            lambda: None,     # Not defined.
-            lambda: None,     # [ee] XOR d8
+            lambda: None,                       # Not defined.
+            lambda: None,                       # Not defined.
+            lambda: None,                       # Not defined.
+            lambda: self.xor_r_im8("A"),        # [ee] XOR d8
             lambda: self.rst_im8(0x28),         # [ef] RST 28H
 
             # F0
@@ -292,17 +292,17 @@ class InstructionMap(object):
             lambda: self.pop("AF"),             # [f1] POP AF
             lambda: self.ld_r_omr("A", "C"),    # [f2] LD A (C)
             lambda: None,     # [f3] DI
-            lambda: None,     # Not defined.
+            lambda: None,                       # Not defined.
             lambda: self.push("AF"),            # [f5] PUSH AF
-            lambda: None,     # [f6] OR d8
+            lambda: self.or_r_im8("A"),         # [f6] OR d8
             lambda: self.rst_im8(0x30),         # [f7] RST 30H
             lambda: self.ldhl_sp_im8(),         # [f8] LD HL SP+r8
             lambda: self.ld_sp_rc("HL"),        # [f9] LD SP HL
             lambda: self.ld_r_mim16("A"),       # [fa] LD A (a16)
             lambda: None,     # [fb] EI
-            lambda: None,     # Not defined.
-            lambda: None,     # Not defined.
-            lambda: None,     # [fe] CP d8
+            lambda: None,                       # Not defined.
+            lambda: None,                       # Not defined.
+            lambda: self.cp_r_im8("A"),         # [fe] CP d8
             lambda: self.rst_im8(0x38),         # [ff] RST 38H
         ]
 
@@ -359,6 +359,38 @@ class InstructionMap(object):
     def ld_rc_im16(self, rc):
         self.c.r[rc[1]] = self.m.read(self.c.pc + 1)
         self.c.r[rc[0]] = self.m.read(self.c.pc + 2)
+
+    def ld_hli_r(self, r1):
+        hl = self.combo_s("HL")
+        self.m.write(hl, r1)
+
+        hl += 1
+        self.c.r["H"] = (hl >> 8) & 0xFF
+        self.c.r["L"] = hl & 0xFF
+
+    def ld_r_hli(self, r1):
+        hl = self.combo_s("HL")
+        self.c.r[r1] = self.m.read(hl)
+
+        hl += 1
+        self.c.r["H"] = (hl >> 8) & 0xFF
+        self.c.r["L"] = hl & 0xFF
+
+    def ld_hld_r(self, r1):
+        hl = self.combo_s("HL")
+        self.m.write(hl, r1)
+
+        hl -= 1
+        self.c.r["H"] = (hl >> 8) & 0xFF
+        self.c.r["L"] = hl & 0xFF
+
+    def ld_r_hld(self, r1):
+        hl = self.combo_s("HL")
+        self.c.r[r1] = self.m.read(hl)
+
+        hl -= 1
+        self.c.r["H"] = (hl >> 8) & 0xFF
+        self.c.r["L"] = hl & 0xFF
 
     def ld_sp_rc(self, rc):
         self.c.sp = self.combo_s(rc)
@@ -417,11 +449,12 @@ class InstructionMap(object):
 
     def jp_oim8(self):
         new_pc = self.c.pc + self.m.read(self.c.pc + 1) - 2
+        self.c.pc = new_pc
 
     def jp_cc_oim8(self, flag, val):
         f = self.c.f[flag]
         if f == val:
-            self.c.pc = self.m.read(self.c.pc + 1) - 2
+            self.c.pc = self.c.pc + self.m.read(self.c.pc + 1) - 2
 
     def call(self):
         self.m.write(self.c.sp - 1, (self.c.pc >> 8) & 0xFF)
@@ -442,7 +475,7 @@ class InstructionMap(object):
 
         self.c.pc = off + self.m.read(self.c.pc + 1) - 2
 
-    def ret(self, ):
+    def ret(self):
         self.c.pc = (self.m.read(self.c.sp + 1) << 8) | self.m.read(self.c.sp) - 1
         self.c.sp += 2
 
@@ -454,6 +487,220 @@ class InstructionMap(object):
     def reti(self):
         self.ret()
         self.m.interrupts_enabled = True
+
+    """ALU Functions"""
+
+    """Addition"""
+    def _add_flags(self, op1, op2, res):
+        self.c.f["C"] = 1 if res > 255 else 0
+        self.c.f["H"] = 1 if ((op1 & 0xF) + (op2 & 0xF) & 0x10) > 0 else 0
+        self.c.f["Z"] = 1 if res == 0 else 0
+        self.c.f["N"] = 0
+
+    def _add_8b(self, op1, op2):
+        res = op1 + op2
+        self._add_flags(op1, op2, res)
+        return res & 0xFF
+
+    def add_r_im8(self, r1):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.c.pc + 1)
+        ret = self._add_8b(op1, op2) & 0xFF
+        self.c.r[r1] = ret
+
+    def add_r_r(self, r1, r2):
+        op1 = self.c.r[r1]
+        op2 = self.c.r[r2]
+        ret = self._add_8b(op1, op2) & 0xFF
+        self.c.r[r1] = ret
+
+    def add_r_mrc(self, r1, rc):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.combo_s(rc))
+        ret = self._add_8b(op1, op2) & 0xFF
+        self.c.r[r1] = ret
+
+    def adc_r_im8(self, r1):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.c.pc + 1) + self.c.f["C"]
+        ret = self._add_8b(op1, op2) & 0xFF
+        self.c.r[r1] = ret
+
+    def adc_r_r(self, r1, r2):
+        op1 = self.c.r[r1]
+        op2 = self.c.r[r2] + self.c.f["C"]
+        ret = self._add_8b(op1, op2) & 0xFF
+        self.c.r[r1] = ret
+
+    def adc_r_mrc(self, r1, rc):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.combo_s(rc)) + self.c.f["C"]
+        ret = self._add_8b(op1, op2) & 0xFF
+        self.c.r[r1] = ret
+
+    def _inc_flags(self, op1):
+        self.c.f['Z'] = 1 if op1 == 0 else 0
+        self.c.f['N'] = 0
+        self.c.f['H'] = 1 if ((op1 & 0xF) + 1 & 0x10) > 0 else 0
+
+    def inc_r(self, r1):
+        op1 = self.c.r[r1]
+        op1 += 1
+        self._inc_flags(op1)
+        self.c.r[r1] = op1
+
+    def inc_mrc(self, rc):
+        op1 = self.m.read(self.combo_s(rc))
+        op1 += 1
+        self._inc_flags(op1)
+        self.m.write(self.combo_s(rc), op1)
+
+    """Subtraction"""
+    def _sub_8b(self, op1, op2):
+        ret = op1 - op2
+        self._sub_flags(op1, op2, ret)
+        return ret
+
+    def _sub_flags(self, op1, op2, ret):
+        self.c.f["C"] = 1 if ret < 0 else 0
+        self.c.f["H"] = 1 if (((op1 & 0xF) - (op2 & 0xF)) & 0x10) > 0 else 0
+        self.c.f["N"] = 1
+        self.c.f["Z"] = 1 if ret == 0 else 0
+
+    def sub_r_r(self, r1, r2):
+        op1 = self.c.r[r1]
+        op2 = self.c.r[r2]
+        ret = self._sub_8b(op1, op2)
+        self.c.r[r1] = ret & 0xFF
+
+    def sub_r_mrc(self, r1, rc):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.combo_s(rc))
+        ret = self._sub_8b(op1, op2)
+        self.c.r[r1] = ret & 0xFF
+
+    def sub_r_im8(self, r1):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.c.pc + 1)
+        ret = self._sub_8b(op1, op2)
+        self.c.r[r1] = ret & 0xFF
+
+    def sbc_r_r(self, r1, r2):
+        op1 = self.c.r[r1]
+        op2 = self.c.r[r2] + self.c.f["C"]
+        ret = self._sub_8b(op1, op2)
+        self.c.r[r1] = ret & 0xFF
+
+    def sbc_r_mrc(self, r1, rc):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.combo_s(rc)) + self.c.f["C"]
+        ret = self._sub_8b(op1, op2)
+        self.c.r[r1] = ret & 0xFF
+
+    def sbc_r_im8(self, r1):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.c.pc + 1) + self.c.f["C"]
+        ret = self._sub_8b(op1, op2)
+        self.c.r[r1] = ret & 0xFF
+
+    def _cp_flags(self, op1, op2, ret):
+        self.c.f['Z'] = 1 if ret == 0 else 0
+        self.c.f['N'] = 1
+        self.c.f['H'] = 1 if (((op1 & 0xF) - (op2 & 0xF)) & 0x10) == 0 else 0
+        self.c.f['C'] = 1 if op1 < op2 else 0
+
+    def cp_r_r(self, r1, r2):
+        op1 = self.c.r[r1]
+        op2 = self.c.r[r2]
+        ret = op1 - op2
+        self._cp_flags(op1, op2, ret)
+
+    def cp_r_mrc(self, r1, rc):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.combo_s(rc))
+        self._cp_flags(op1, op2, op1-op2)
+
+    def cp_r_im8(self, r1):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.c.pc + 1)
+        self._cp_flags(op1, op2, op1-op2)
+
+    """Bitwise Operations"""
+
+    def _and_flags(self, ret):
+        self.c.f["Z"] = 1 if ret == 0 else 0
+        self.c.f["N"] = 0
+        self.c.f["H"] = 1
+        self.c.f["C"] = 0
+
+    def and_r_r(self, r1, r2):
+        op1 = self.c.r[r1]
+        op2 = self.c.r[r2]
+        ret = (op1 & op2) & 0xFF
+        self._and_flags(ret)
+        self.c.r[r1] = ret
+
+    def and_r_mrc(self, r1, rc):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.combo_s(rc))
+        ret = (op1 & op2) & 0xFF
+        self._and_flags(ret)
+        self.c.r[r1] = ret
+
+    def and_r_im8(self, r1):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.c.pc + 1)
+        ret = (op1 & op2) & 0xFF
+        self._and_flags(ret)
+        self.c.r[r1] = ret
+
+    def _or_flags(self, ret):
+        self.c.f["Z"] = 1 if ret == 0 else 0
+        self.c.f["N"] = 0
+        self.c.f["H"] = 0
+        self.c.f["C"] = 0
+
+    def or_r_r(self, r1, r2):
+        op1 = self.c.r[r1]
+        op2 = self.c.r[r2]
+        ret = (op1 | op2) & 0xFF
+        self._or_flags(ret)
+        self.c.r[r1] = ret
+
+    def or_r_mrc(self, r1, rc):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.combo_s(rc))
+        ret = (op1 | op2) & 0xFF
+        self._or_flags(ret)
+        self.c.r[r1] = ret
+
+    def or_r_im8(self, r1):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.c.pc + 1)
+        ret = (op1 | op2) & 0xFF
+        self._or_flags(ret)
+        self.c.r[r1] = ret
+
+    def xor_r_r(self, r1, r2):
+        op1 = self.c.r[r1]
+        op2 = self.c.r[r2]
+        ret = (op1 ^ op2) & 0xFF
+        self._or_flags(ret)
+        self.c.r[r1] = ret
+
+    def xor_r_mrc(self, r1, rc):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.combo_s(rc))
+        ret = (op1 ^ op2) & 0xFF
+        self._or_flags(ret)
+        self.c.r[r1] = ret
+
+    def xor_r_im8(self, r1):
+        op1 = self.c.r[r1]
+        op2 = self.m.read(self.c.pc + 1)
+        ret = (op1 ^ op2) & 0xFF
+        self._or_flags(ret)
+        self.c.r[r1] = ret
 
 
 class CPU(object):
@@ -510,23 +757,25 @@ class CPU(object):
             if data == 0xCB:
                 self._log.debug("[{:02x}] CB not implemented yet.".format(self.pc))
                 skip_instr = self.ops.cb_instructions[self.mem.read(self.pc+1)]
-                self.pc += skip_instr.bytes + 1
+                self.pc += skip_instr.bytes
                 self._log.debug("Skipped instruction: {}".format(skip_instr))
                 continue
 
             func = self.instructions.map[data]
             instr = self.ops.instructions[data]
 
-            self._log.debug("Instruction: 0x{:02x}: [0x{:02x}] -> {}".format(self.pc, data, instr))
+            #self._log.debug("Instruction: 0x{:02x}: [0x{:02x}] -> {}".format(self.pc, data, instr))
             try:
                 if func:
                     func()
-                    self.stack_dump()
+                    #self.stack_dump()
             except Exception as e:
                 self.stack_dump()
                 self._log.exception(e)
+                self._log.fatal("Unable to continue")
 
             self.pc += instr.bytes
+            #input()
 
     def stack_dump(self):
         message = ""
@@ -540,3 +789,4 @@ class CPU(object):
         message += "   {}: 0x{:02x}\n".format("sp", self.sp)
         message += "   {}: 0x{:02x}\n".format("pc", self.pc)
         self._log.error(message)
+
