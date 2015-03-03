@@ -702,6 +702,66 @@ class InstructionMap(object):
         self._or_flags(ret)
         self.c.r[r1] = ret
 
+    """ 16 bit ALU """
+
+    def _set_rc(self, rc, value):
+        self.c.r[rc[0]] = (value & 0xFF00) >> 16
+        self.c.r[rc[1]] = (value & 0xFF)
+
+    def _add_16b(self, op1, op2):
+        res = op1 + op2
+        self.c.f["N"] = 0
+        self.c.f["H"] = 1 if (((op1 & 0xF00) >> 16) + ((op2 & 0xF00) >> 16) & 0x10) > 0 else 0
+        self.c.f["C"] = 1 if res > 0xFFFF else 0
+        return res
+
+    def add_hl_rc(self, rc):
+        op1 = self.combo_s("HL")
+        op2 = self.combo_s(rc)
+
+        res = self._add_16b(op1, op2) & 0xFFFF
+        self._set_rc("HL", res)
+
+    def add_hl_sp(self):
+        op1 = self.combo_s("HL")
+        op2 = self.c.sp
+
+        res = self._add_16b(op1, op2) & 0xFFFF
+        self._set_rc("HL", res)
+
+    def add_sp_im8(self):
+        op1 = self.c.sp
+        op2 = self.m.read(self.c.pc + 1) # Signed
+        op2 = -((~op2 + 1) & 0xFF) if op2 > 127 else op2 # Sign the value
+
+        self.c.f["Z"] = 0
+        self.c.f["N"] = 0
+        self.c.f["H"] = 0 # TODO Investigate further.
+        self.c.f["C"] = 0 # TODO Investigate further
+
+        res = (op1 + op2) & 0xFFFF
+        self.c.sp = res
+
+    def inc_rc(self, rc):
+        op1 = self.combo_s(rc)
+        res = (op1 + 1) & 0xFFFF
+        self._set_rc(rc, res)
+
+    def inc_sp(self):
+        op1 = self.c.sp
+        res = (op1 + 1) & 0xFFFF
+        self.c.sp = res
+
+    def dec_rc(self, rc):
+        op1 = self.combo_s(rc)
+        res = (op1 - 1) & 0xFFFF
+        self._set_rc(rc, res)
+
+    def dec_sp(self):
+        op1 = self.c.sp
+        res = (op1 - 1) & 0xFFFF
+        self.c.sp = res
+
 
 class CPU(object):
 
