@@ -431,6 +431,10 @@ class InstructionMap(object):
         self.c.r[rc[0]] = self.m.read(self.c.sp+1)
         self.c.sp += 2
 
+        # Update the flags if we need to.
+        if rc[1] == "F":
+            self.c.set_f_register(self.c.r["F"])
+
     """
     Note that for each of the *JUMP* instructions, we subtract the byte size of the instruction
     to negate the Program Counter increment.
@@ -762,6 +766,54 @@ class InstructionMap(object):
         res = (op1 - 1) & 0xFFFF
         self.c.sp = res
 
+    """ Miscellaneous Functions """
+    def swap(self, r1):
+        op1 = self.c.r[r1]
+        res = ((op1 & 0xF) << 4) | ((op1 & 0xF0) >> 4)
+        self.c.f["Z"] = 1 if res == 0 else 0
+        self.c.f["N"] = 0
+        self.c.f["H"] = 0
+        self.c.f["C"] = 0
+        self.c.r[r1] = res
+
+    def swap_mhl(self):
+        op1 = self.m.read(self.combo_s("HL"))
+        res = ((op1 & 0xF) << 4) | ((op1 & 0xF0) >> 4)
+        self.m.write(self.combo_s("HL"), res & 0xFF)
+
+    def daa(self):
+        """Credit to: http://forums.nesdev.com/viewtopic.php?t=9088
+        User: DParrot
+        Accessed: March 2nd, 2015
+        Written: Jul 29, 2010"""
+
+        op1 = self.c.r["A"]
+
+        if self.c.f["N"] == 1:
+            if self.c.f["H"] == 1 or (op1 * 0xF) > 0x9:
+                op1 += 0x06
+            if self.c.f["C"] == 1 or op1 > 0x9F:
+                op1 += 0x60
+        else:
+            if self.c.f["H"] == 1:
+                op1 = (op1 - 0x6) & 0xFF
+            if self.c.f["C"] == 1:
+                op1 -= 0x60
+
+        f_reg = self.c.get_f_register()
+        f_reg &= ~0xa0  # & with complement of Z and H position
+
+        if (op1 & 0x100) == 0x100:
+            f_reg |= 0x10
+
+        op1 &= 0xFF
+
+        if op1 == 0:
+            f_reg |= 0x80
+
+        self.c.set_f_register(f_reg)
+        self.c.r["A"] = op1
+
 
 class CPU(object):
 
@@ -837,6 +889,15 @@ class CPU(object):
             self.pc += instr.bytes
             #input()
 
+    def get_f_register(self):
+        return (self.f["Z"] << 7) | (self.f["N"] << 6) | (self.f["H"] << 5) | (self.f["C"] << 4)
+
+    def set_f_register(self, f):
+        self.f["Z"] = f & 0b1000000
+        self.f["N"] = f & 0b0100000
+        self.f["H"] = f & 0b0010000
+        self.f["C"] = f & 0b0001000
+
     def stack_dump(self):
         message = ""
         message += "STACK TRACE " + ("=" * 66) + "\n"
@@ -849,4 +910,5 @@ class CPU(object):
         message += "   {}: 0x{:02x}\n".format("sp", self.sp)
         message += "   {}: 0x{:02x}\n".format("pc", self.pc)
         self._log.error(message)
+
 
