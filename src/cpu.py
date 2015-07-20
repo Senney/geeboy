@@ -362,7 +362,7 @@ class InstructionMap(object):
 
     def ld_hli_r(self, r1):
         hl = self.combo_s("HL")
-        self.m.write(hl, r1)
+        self.m.write(hl, self.c.r[r1])
 
         hl += 1
         self.c.r["H"] = (hl >> 8) & 0xFF
@@ -421,9 +421,7 @@ class InstructionMap(object):
 
     def push(self, rc):
         """Pushes the value from a register pair on to the stack."""
-        self.m.write(self.c.sp - 1, self.c.r[rc[0]])
-        self.m.write(self.c.sp - 2, self.c.r[rc[1]])
-        self.c.sp -= 2
+        self.c.push((self.c.r[rc[0]] << 4) & (self.c.r[rc[1]] & 0xFF))
 
     def pop(self, rc):
         """Pops two bytes off of the stack."""
@@ -874,7 +872,7 @@ class InstructionMap(object):
 
 class CPU(object):
 
-    def __init__(self, cart, mem, ops):
+    def __init__(self, cart, mem, ops, screen):
         """
         :type cart: Cartridge
         :type mem: MemoryController
@@ -882,11 +880,13 @@ class CPU(object):
         :param cart: The loaded Cartridge
         :param mem: The memory unit, which we will use for access.
         :param ops: The OpcodeParser which will provide timing and instruction information
+        :param screen: Graphics unit/screen
         :return:
         """
         self.cart = cart
         self.mem = mem
         self.ops = ops
+        self.screen = screen
         self._log = logging.getLogger("CPU")
         self.halt = False
         self.r = {
@@ -910,6 +910,20 @@ class CPU(object):
         }
 
         self.instructions = InstructionMap(self, self.mem)
+
+    def push(self, value):
+        self.mem.write(self.sp - 1, (value >> 4) & 0xFF)
+        self.mem.write(self.sp - 2, value & 0xFF)
+        self.sp -= 2
+
+    def pop(self):
+        pass
+
+    def vblank(self):
+
+        # push pc.
+        self.push(self.pc)
+        self.pc = 0x40
 
     def run(self):
 
@@ -937,21 +951,28 @@ class CPU(object):
 
             func = self.instructions.map[data]
             instr = self.ops.instructions[data]
+            if type(instr) is int:
+                self.pc += 1
+                continue
 
-            self._log.debug("Instruction: 0x{:02x}: [0x{:02x}] -> {}".format(self.pc, data, instr))
+            #self._log.debug("Instruction: 0x{:02x}: [0x{:02x}] -> {}".format(self.pc, data, instr))
             try:
                 if func:
                     func()
                     self.set_f_register(self.get_f_register())
+                    self.screen.tick(instr.cycles[0])
                     #self.stack_dump()
                 else:
-                    self._log.info("NOT IMPLEMENTED.")
+                    self._log.info("NOT IMPLEMENTED: [{:02x}]".format(data))
+                    continue
             except Exception as e:
                 self.stack_dump()
                 self._log.exception(e)
                 self._log.fatal("Unable to continue")
 
             self.pc += instr.bytes
+            self.pc &= 0xFFFF       # Ensure we don't overflow.
+
             #input()
 
     def get_f_register(self):

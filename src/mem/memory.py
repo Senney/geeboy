@@ -12,12 +12,14 @@ class MemoryAccessDeniedError(Exception):
 
 class MemoryController(object):
 
-    def __init__(self, cart):
+    def __init__(self, cart, screen):
         """
         :type cart: Cartridge
+        :type screen: Screen
         """
         self.type = "GenericMemoryUnit"
         self.cart = cart
+        self.screen = screen
         self._log = logging.getLogger("MemoryController")
 
         # Video RAM
@@ -70,6 +72,8 @@ class MemoryController(object):
 
         # Hardware Registers
         if 0xFF00 <= byte <= 0xFF7F:
+            if 0xFF40 <= byte <= 0xFF4B:
+                self.screen.read(byte)
             return self._hreg[byte - 0xFF00]
 
         # High memory
@@ -88,27 +92,32 @@ class MemoryController(object):
             self._video[byte-0x8000] = value
 
         # Internal Memory
-        if 0xC000 <= byte <= 0xDFFF:
+        elif 0xC000 <= byte <= 0xDFFF:
             self._imem[byte-0xC000] = value
 
         # Reserved Memory
-        if 0xE000 <= byte <= 0xFDFF:
+        elif 0xE000 <= byte <= 0xFDFF:
             raise MemoryAccessDeniedError("Cannot write to ECHO RAM")
 
         # Unused Memory
-        if 0xFEA0 <= byte <= 0xFEFF:
+        elif 0xFEA0 <= byte <= 0xFEFF:
             raise MemoryAccessDeniedError("Cannot write to Unused Memory")
 
         # Hardware Registers
-        if 0xFF00 <= byte <= 0xFF7F:
-            raise NotImplementedError("Hardware registers are not implemented yet.")
+        elif 0xFF00 <= byte <= 0xFF7F:
+            self._log.debug("HReg [{:02x}] set to {:02x}".format(byte, value))
+
+            if self.screen.in_range(byte):
+                self.screen.write(byte, value)
+            else:
+                self._hreg[byte - 0xFF00] = value
 
         # High memory
-        if 0xFF80 <= byte <= 0xFFFE:
+        elif 0xFF80 <= byte <= 0xFFFE:
             self._hmem[byte - 0xFF80] = value
 
         # Interrupt Enabled register
-        if byte == 0xFFFF:
+        elif byte == 0xFFFF:
             self.interrupts_enabled = 1 if value == 0x1 else 0
 
         return None

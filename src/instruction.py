@@ -59,9 +59,9 @@ class OpcodeParser(object):
     def _create_instruction(self, dataset, instr, set, type):
         opcode = int(instr, 16)
         data = dataset[type][instr]
-        self.log.debug("Loading instruction: {:02x}".format(opcode))
+        #self.log.debug("Loading instruction: {:02x}".format(opcode))
         set[opcode] = self._parse_definition(opcode, data)
-        self.log.debug("Loaded instruction: {}".format(set[opcode]))
+        #self.log.debug("Loaded instruction: {}".format(set[opcode]))
 
     def load_instructions(self, path):
         """

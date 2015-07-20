@@ -6,8 +6,8 @@ class MBC1(MemoryController):
     ROM_BANK_MODE = 0x0
     RAM_BANK_MODE = 0x1
 
-    def __init__(self, cart):
-        super().__init__(cart)
+    def __init__(self, cart, screen):
+        super().__init__(cart, screen)
         self._log = logging.getLogger("MBC1")
         self.mode = self.ROM_BANK_MODE
         self.ram_enabled = True
