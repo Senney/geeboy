@@ -1,0 +1,3 @@
+[submodule "util/rgbds"]
+	path = util/rgbds
+	url = https://github.com/bentley/rgbds.git
