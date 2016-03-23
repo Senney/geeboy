@@ -183,6 +183,11 @@ main:
     LD C, $00
     LD A, [$FF00+C]
 
+    LD A, $0A
+.simpleloop:
+    SUB 1
+    JP NZ, .simpleloop
+
     halt
     jr .loop
 
