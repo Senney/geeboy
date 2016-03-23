@@ -11,7 +11,7 @@ class GeeBoy(object):
     def __init__(self):
         # self.rom = "../data/loz.gb"
         # self.rom = "../data/test/individual/09-op r,r.gb"
-        self.rom = "../data/mr-do.gb"
+        self.rom = "../test/simple-rom/simple.gb"
 
         self._cartridge = Cartridge(self.rom)
 
@@ -22,6 +22,7 @@ class GeeBoy(object):
 
         self._mem = mbc1.MBC1(self._cartridge, self._screen)
         self._cpu = CPU(self._cartridge, self._mem, self._codes, self._screen)
+
         self._screen.set_cpu(self._cpu)
         self._cpu.run()
 
