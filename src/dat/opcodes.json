@@ -5481,7 +5481,7 @@
       "operand2": "(C)",
       "mnemonic": "LD",
       "operand1": "A",
-      "bytes": 2,
+      "bytes": 1,
       "operand_count": 2,
       "flags_ZHNC": [
         "-",
